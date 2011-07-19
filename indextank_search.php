@@ -3,14 +3,14 @@
 /**
  * @package Indextank Search
  * @author Diego Buthay
- * @version 1.0
+ * @version 1.0.1
  */
 /*
    Plugin Name: IndexTank Search
    Plugin URI: http://github.com/flaptor/indextank-wordpress/
    Description: IndexTank makes search easy, scalable, reliable .. and makes you happy :)
    Author: Diego Buthay
-   Version: 1.0
+   Version: 1.0.1
    Author URI: http://twitter.com/dbuthay
  */
 
@@ -348,6 +348,13 @@ function indextank_provision_account() {
         update_option("it_api_url", $config->INDEXTANK_PRIVATE_API_URL);
         // the index name is ALWAYS idx for public provisioning
         update_option("it_index_name", "idx");
+
+
+        // update default function to 'relevance'
+        $client = new Indextank_Api($config->INDEXTANK_PRIVATE_API_URL);
+        $index = $client->get_index("idx");
+        $index->add_function(0, 'r');
+        $index->add_function(1, '-age');
 
         return true;
     }
