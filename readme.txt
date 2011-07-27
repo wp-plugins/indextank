@@ -34,7 +34,25 @@ You are all set, now just query something on your blog sidebar. If the results d
 
 == Frequently Asked Questions ==
 
-None so far
+* **Q**: Do I need to get an account on indextank.com to use this plugin?
+  * **A**: Not really. The plugin can get an account for you, from your dashboard.
+
+* **Q**: Is it FREE?
+  * **A**: Yes, until you get 100,000 posts it is. If you ever go over that limit (a lot of blogging!) you may have to upgrade.
+
+* **Q**: Are there any knows issues with other plugins?
+  * **A**: Not really. This plugin calls `apply_filters('the_content', $post->post_content)`, so if there's a buggy filter you may see errors while indexing. If that happens, please let us know at **support (at) indextank (dot) com**
+
+== Upgrade Notice ==
+
+You'll get a message on your dashboard, in case you need to upgrade your index. In that case, you need to:
+
+* Go to the 'Tools' -> 'Indextank Searching' menu on your dashboard
+* Click the 'Reset Index!' button
+* Your index will show as 'STARTING' .. wait a few seconds and go again to the 'Tools' -> 'Indextank Searching' menu on your dashboard. **DON'T HIT THE RELOAD BUTTION!**
+* Once your index shows as 'RUNNING', hit the 'Index All posts!' button.
+* Great, you're upgraded :) 
+
 
 == Changelog ==
 
