@@ -3,14 +3,14 @@
 /**
  * @package Indextank Search
  * @author Diego Buthay
- * @version 1.1.1
+ * @version 1.1.2
  */
 /*
    Plugin Name: IndexTank Search
    Plugin URI: http://github.com/flaptor/indextank-wordpress/
    Description: IndexTank makes search easy, scalable, reliable .. and makes you happy :)
    Author: Diego Buthay
-   Version: 1.1.1
+   Version: 1.1.2
    Author URI: http://twitter.com/dbuthay
  */
 
@@ -85,11 +85,20 @@ function indextank_post_as_array($somepost) {
     $content['post_author'] .= " ";
     $content['post_author'] .= isset($userdata->last_name) ? $userdata->last_name : "";
     
-    
-    $content['post_content'] = html_entity_decode(strip_tags(apply_filters("the_content", $post->post_content)), ENT_COMPAT, "UTF-8"); 
+  
+    // handle text indexing, applying filters if necessary
+    if ( get_option("it_apply_filters") ) { 
+        $the_content = apply_filters("the_content", $post->post_content);
+        $the_text    = apply_filters("the_content", $post->post_title . " " . $post->post_content . " " . $content['post_author']);
+    } else {
+        $the_content = $post->post_content;
+        $the_text    = $post->post_title . " " . $post->post_content . " " . $content['post_author'];
+    }
+
+    $content['post_content'] = html_entity_decode(strip_tags($the_content), ENT_COMPAT, "UTF-8"); 
     $content['post_title'] = $post->post_title;
     $content['timestamp'] = strtotime($post->post_date_gmt);
-    $content['text'] = html_entity_decode(strip_tags(apply_filters( "the_content", $post->post_title . " " . $post->post_content . " " . $content['post_author']) ), ENT_COMPAT, "UTF-8"); # everything together here
+    $content['text'] = html_entity_decode(strip_tags($the_text), ENT_COMPAT, "UTF-8");
     $content['url'] = get_permalink($post->ID);
 
 
@@ -228,6 +237,14 @@ function indextank_manage_page() {
         indextank_index_all_posts();
     }
 
+    if (isset($_POST['indexing_settings'])){
+        if (isset($_POST['apply_filters'])) {
+            update_option('it_apply_filters', true);
+        } else {
+            delete_option('it_apply_filters');
+        }
+    }
+
     if (isset($_POST['it_reset'])) {
         indextank_reset_index();
     }
@@ -314,6 +331,11 @@ function indextank_manage_page() {
             <p style="line-height: 1.7em">
                 New post will get indexed automatically!
             </p>
+
+            <form METHOD="POST" action="">
+                <input type="checkbox" name="apply_filters" value="Yes" <?php echo get_option("it_apply_filters")? "checked" : ""; ?>></input> Apply 'the_content' filters when indexing posts. Useful if MarkDown (or other content-mangling ) plugin is enabled. <br/>
+                <input type="submit" name="indexing_settings" value="Save settings"></input>
+            </form>
 
             <?php
                         } else {
@@ -468,7 +490,7 @@ function indextank_create_itjq_configuration() {
     $rss_url = get_bloginfo('rss2_url');
     # home_url is available since 3.0
     $blog_url = function_exists('home_url') ? home_url() : site_url();
-    $theme = get_current_theme();
+    $theme = sanitize_title(get_current_theme());
     
 
     $params = http_build_query( array(
@@ -495,7 +517,8 @@ function indextank_create_itjq_configuration() {
     }
 
 
-    $target_filename = dirname(__FILE__) . '/js/blogsearch.js';
+    $upload_dir = wp_upload_dir();
+    $target_filename = $upload_dir['basedir'] . "/blogsearch.$theme.js";
 
     // keep the old blogsearch.js, if existed
     if (file_exists($target_filename)) {
@@ -693,8 +716,21 @@ add_action('wp_head','inject_indextank_head_script');
 function indextank_include_js_css(){
     // check it's not an admin page
     if (!is_admin()) {
+
+        
+        $upload_dir = wp_upload_dir();
+        $theme = sanitize_title(get_current_theme());
+
+        if (file_exists( $upload_dir['basedir'] . "/blogsearch.$theme.js") ) {
+            $blogsearch_file = $upload_dir['baseurl'] . "/blogsearch.$theme.js";
+        } else {
+            $blogsearch_file = plugins_url("js/blogsearch.js", __FILE__);
+        }
+
+
+
         wp_enqueue_style("jquery-ui","http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.5/themes/flick/jquery-ui.css");
-        wp_enqueue_script("itwpsearch", plugins_url( "js/blogsearch.js", __FILE__), array("instantsearch"));
+        wp_enqueue_script("itwpsearch", $blogsearch_file, array("instantsearch"));
         wp_enqueue_script("instantsearch", plugins_url( "js/jquery.indextank.instantsearch.js", __FILE__), array("ize"));
         wp_enqueue_script("autocomplete", plugins_url( "js/jquery.indextank.autocomplete.js", __FILE__), array("ize"));
         wp_enqueue_script("statsrenderer", plugins_url( "js/jquery.indextank.statsrenderer.js", __FILE__), array("ize"));
