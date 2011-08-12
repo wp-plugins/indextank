@@ -3,18 +3,18 @@
 /**
  * @package Indextank Search
  * @author Diego Buthay
- * @version 1.1.3
+ * @version 1.1.5
  */
 /*
    Plugin Name: IndexTank Search
    Plugin URI: http://github.com/flaptor/indextank-wordpress/
    Description: IndexTank makes search easy, scalable, reliable .. and makes you happy :)
    Author: Diego Buthay
-   Version: 1.1.3
+   Version: 1.1.5
    Author URI: http://twitter.com/dbuthay
  */
 
-
+$indextank_plugin_version = '1.1.5';
 require_once("indextank.php");
 
 // the indextank index format version.
@@ -173,7 +173,7 @@ function indextank_index_posts($offset=0, $pagesize=30){
         ini_set('max_execution_time', 0);
         ini_set('max_input_time', 0);
         $my_query = new WP_Query();
-        $query_res = $my_query->query("post_status=publish&orderby=ID&order=DESC&posts_per_page=$pagesize&offset=$offset");
+        $query_res = $my_query->query("post_status=publish&orderby=ID&order=DESC&post_type=any&posts_per_page=$pagesize&offset=$offset");
         $message = "";
         if ($query_res) {
             // this may throw an exception .. let it float!
@@ -194,6 +194,12 @@ function indextank_index_posts($offset=0, $pagesize=30){
 
 
 // TODO allow to delete the index.
+function indextank_notify_curl_needed() {
+    if (!function_exists('curl_init') ) {
+        echo '<div id="message" class="error">You MUST update your <strong>PHP</strong> installation to include CURL to use the IndexTank plugin.</div>';
+    }     
+}
+add_action( 'admin_notices', 'indextank_notify_curl_needed');
 
 function indextank_notify_upgrade_needed() {
     // this version number has to do with the 'format' of the index. Not the plugin version
@@ -225,7 +231,10 @@ function indextank_manage_page() {
         }
     }
 
-    if (isset($_POST['provision'])) {
+    $it_api_url = get_option("it_api_url");
+    $it_index_name = get_option("it_index_name");
+
+    if (isset($_POST['provision']) && !$it_api_url) {
         indextank_provision_account();
     } 
     
@@ -249,10 +258,6 @@ function indextank_manage_page() {
         indextank_reset_index();
     }
 
-
-    $it_api_url = get_option("it_api_url");
-    $it_index_name = get_option("it_index_name");
-
     ?>
         <div class="wrap">
             <div id="icon-tools" class="icon32"><br></div>
@@ -260,6 +265,12 @@ function indextank_manage_page() {
             
             <h2>IndexTank Search Configuration</h2>
             <?php
+              if ( !function_exists('curl_init') ) {
+              ?>
+                <p> Your PHP installation lacks CURL support. Contact your sysadmin and ask them to activate CURL for your PHP installation. </p>
+            <?php
+                return;
+              } 
                 if ( ( $it_api_url     == false ) && 
                      ( $it_index_name  == false ) ) { 
                 ?>
@@ -672,9 +683,11 @@ function inject_indextank_head_script(){
     $private_api_url = get_option("it_api_url", "http://:aoeu@indextank.com/");
     $parts = explode("@", $private_api_url, 2);
     $public_api_url = "http://" . $parts[1];
+    global $indextank_plugin_version;
     ?>
         <script>
 
+            var INDEXTANK_PLUGIN_VERSION = "<?php echo $indextank_plugin_version;?>";
             var INDEXTANK_PUBLIC_URL = "<?php echo $public_api_url;?>";
             var INDEXTANK_INDEX_NAME = "<?php echo get_option("it_index_name");?>";
 
