@@ -3,18 +3,18 @@
 /**
  * @package Indextank Search
  * @author Diego Buthay
- * @version 1.1.5
+ * @version 1.2
  */
 /*
    Plugin Name: IndexTank Search
    Plugin URI: http://github.com/flaptor/indextank-wordpress/
    Description: IndexTank makes search easy, scalable, reliable .. and makes you happy :)
    Author: Diego Buthay
-   Version: 1.1.5
+   Version: 1.2
    Author URI: http://twitter.com/dbuthay
  */
 
-$indextank_plugin_version = '1.1.5';
+$indextank_plugin_version = '1.2';
 require_once("indextank.php");
 
 // the indextank index format version.
@@ -109,6 +109,36 @@ function indextank_post_as_array($somepost) {
             $content['thumbnail'] = $thumbnails[0];
         }  
     }
+
+    // now, make sure the document is not over 100kb
+    $sum = array_sum(
+        array_map(
+            'mb_strlen',
+            array_values( $content )
+        )
+    );
+
+    $excess = $sum - ( 100 * 1024 ) ;
+    if ($excess > 0) {
+        // first trim text, as it just removes tokens from autocomplete
+        // then, try trimming text .. 
+        $trim_candidates = array("text", "post_content");
+        foreach ($trim_candidates as $field) {
+            $field_length = mb_strlen($content[$field]);
+
+            // is the excess bigger than the field? unset it
+            if ($excess > $field_length) {
+                $excess -= $field_length;
+                unset($content[$field]);
+            } else {
+                // ok, we only need to trim a bit
+                $content[$field] = substr($content[$field], 0, $excess * -1);
+                break;
+            }
+        }
+    }
+
+
 
     $vars = array("0" => $post->comment_count);
 
@@ -282,12 +312,11 @@ function indextank_manage_page() {
                </p>
                </form>
 
-                <div style="clear:both"></div>
                 <?php
                 }
                 ?>
  
-            <form METHOD="POST" action="" style="float:left">
+            <form METHOD="POST" action="" style="float:left; clear:left">
                 <h3>Index parameters</h3>
                 <table class="form-table"> 
                     <tr> 
@@ -389,7 +418,7 @@ function indextank_manage_page() {
             <h2>Look and Feel</h2>
             <form METHOD="POST" action="">
             <p style="line-height: 1.7em">
-                Indextank is compatible with most Wordpress plugins out-of-the-box. If posts are not rendered nicely, you can try reconfiguring it with
+                Indextank is compatible with most Wordpress themes out-of-the-box. If posts are not rendered nicely, you can try reconfiguring it with
                 <input type="submit" name="create-itjq" value="Magic!">
             </p>
             </form>
@@ -696,6 +725,15 @@ function inject_indextank_head_script(){
 
         <style>
 
+        #sorting span.selected { 
+            font-weight: bolder;
+        }
+
+        #sorting span {
+            cursor: pointer;
+        }
+
+
         #paginator {
             font-size: 1.4em;
         }
@@ -750,6 +788,7 @@ function indextank_include_js_css(){
         wp_enqueue_script("autocomplete", plugins_url( "js/jquery.indextank.autocomplete.js", __FILE__), array("ize"));
         wp_enqueue_script("statsrenderer", plugins_url( "js/jquery.indextank.statsrenderer.js", __FILE__), array("ize"));
         wp_enqueue_script("renderer", plugins_url( "js/jquery.indextank.renderer.js", __FILE__), array("ize"));
+        wp_enqueue_script("sorting", plugins_url( "js/jquery.indextank.sorting.js", __FILE__), array("ize"));
         wp_enqueue_script("pagination", plugins_url( "js/jquery.indextank.pagination.js", __FILE__), array("ize"));
         wp_enqueue_script("ajaxsearch", plugins_url( "js/jquery.indextank.ajaxsearch.js", __FILE__), array("ize"));
         wp_enqueue_script("querybuilder", plugins_url( "js/querybuilder.js", __FILE__), array("ize"));
