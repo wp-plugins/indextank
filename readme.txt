@@ -3,7 +3,7 @@ Contributors: dbuthay, flaptor
 Tags: search, better search, search replacement, autocomplete, ajax, cloud, instantsearch, suggestions, autocorrect
 Requires at least: 2.8
 Tested up to: 3.2.1
-Stable tag: 1.1.7
+Stable tag: 1.2
 
 IndexTank hosted, realtime search (FTW!)
 
@@ -15,7 +15,10 @@ IndexTank brings nice, instant search to your blog, with automatic suggestions o
 
 * InstantSearch: See results as you type!
 * AutoComplete.
-* Works with *ALL* WordPress templates 
+* Match highlighting. Displays just the *relevant* parts of the matched posts.
+* Phrase matching. You can use *'quotes'* to get exact matches.
+* Works with *ALL* WordPress templates
+* Sorting. Order results by **relevance**, **newest** or **comments**
 * Pagination
 * No need to write PHP code
 
@@ -55,6 +58,10 @@ You'll get a message on your dashboard, in case you need to upgrade your index. 
 
 
 == Changelog ==
+
+= 1.2 = 
+
+* Add sorting controls to search results. You can now sort results by *relevance*, *newest* and *comments*
 
 = 1.1.7 = 
 
